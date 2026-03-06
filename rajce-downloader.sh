@@ -48,7 +48,7 @@ elif [ -n "$1" ]; then
 else
     echo "Usage:"
     echo "  Single gallery: $0 <gallery_url> [folder_name]"
-    echo "  Batch mode:     $0 -f urls.txt"
+    echo "  Batch mode:     $0 -f <file>"
     exit 1
 fi
 
