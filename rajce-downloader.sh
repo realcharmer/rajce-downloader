@@ -8,16 +8,29 @@ download_album() {
 
     echo "Downloading $ALBUM_URL to $FOLDER"
 
-    HTML=$(curl -s "$ALBUM_URL")
-    echo "$HTML" \
+    HTML=$(curl -s -H 'Accept-Language: en' "$ALBUM_URL")
+    EXPECTED=$(echo "$HTML" | grep -oP '<span>\K[0-9]+(?= photos</span>)' | head -n1)
+    URLS=$(echo "$HTML" \
       | grep -oP '"contentUrl":"\K[^"]+' \
       | sed 's/\\\//\//g' \
-      | sort -u \
-      | while read -r IMG_URL; do
-          FILENAME=$(basename "$IMG_URL")
-          echo "Downloading $FILENAME"
-          wget -q -O "$FOLDER/$FILENAME" "$IMG_URL"
-        done
+      | sort -u)
+
+    echo "Expected photos: ${EXPECTED:-unknown}"
+    echo "$URLS" | while read -r IMG_URL; do
+        FILENAME=$(basename "$IMG_URL")
+        echo "Downloading $FILENAME"
+        wget -q -O "$FOLDER/$FILENAME" "$IMG_URL"
+    done
+
+    DOWNLOADED=$(ls -1 "$FOLDER" | wc -l)
+
+    echo "Downloaded files: $DOWNLOADED"
+
+    if [ -n "$EXPECTED" ] && [ "$DOWNLOADED" -ne "$EXPECTED" ]; then
+        echo "WARNING: Expected $EXPECTED photos but downloaded $DOWNLOADED"
+    else
+        echo "Photo count matches."
+    fi
 
     echo "Finished downloading to $FOLDER"
     echo
